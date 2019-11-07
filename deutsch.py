@@ -29,10 +29,16 @@ def balanced(x):
         parity = not parity
     return parity
 
-    
+def gen_balanced(n_bits):
+    l = [False] * 2**(n_bits-1) + [True] * 2**(n_bits-1)
+    random.shuffle(l)
+    return lambda x: l[x]
 
-for trial in range(20):
-    function = random.choice([constant0, constant1, balanced])
+n_errors = 0
+
+for trial in range(1000):
+    balanced = gen_balanced(3)
+    function = random.choice([constant0, constant1, balanced, balanced])
     if function == balanced:
         print('Oracle: Balanced')
     else:
@@ -44,20 +50,22 @@ for trial in range(20):
     b3 = Qubit()
     ba = Qubit()
     sigmaX(ba)
-    
+        
     hadamard(b1)
     hadamard(b2)
     hadamard(b3)
     hadamard(ba)
 
     apply_operator(a, b1, b2, b3, ba)
-    
+        
     hadamard(b1)
     hadamard(b2)
     hadamard(b3)
-    
-    if measure(b1):
+
+    if (measure(b1) or measure(b2) or measure(b3)):
         print('Predicted: Balanced')
+        assert function == balanced
     else:
         print('Predicted: Constant')
+        assert function != balanced
     print()

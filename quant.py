@@ -48,7 +48,6 @@ def apply_operator(operator, *qubits):
 
 
 def measure(b):
-    #breakpoint()
     space = b.space
     state = space.state
     i = b.space.qubits.index(b)
