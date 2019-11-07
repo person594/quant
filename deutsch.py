@@ -22,47 +22,41 @@ def constant0(x):
 def constant1(x):
     return True
 
-def balanced(x):
-    parity = False
-    while x:
-        x &= x-1
-        parity = not parity
-    return parity
-
 def gen_balanced(n_bits):
     l = [False] * 2**(n_bits-1) + [True] * 2**(n_bits-1)
     random.shuffle(l)
     return lambda x: l[x]
 
-n_errors = 0
+n_bits = 10
 
-for trial in range(1000):
-    balanced = gen_balanced(3)
+for trial in range(10):
+    balanced = gen_balanced(n_bits)
     function = random.choice([constant0, constant1, balanced, balanced])
     if function == balanced:
         print('Oracle: Balanced')
     else:
         print('Oracle: Constant')
-    a = quantize(function, 3)
+    a = quantize(function, n_bits)
     
-    b1 = Qubit()
-    b2 = Qubit()
-    b3 = Qubit()
-    ba = Qubit()
-    sigmaX(ba)
-        
-    hadamard(b1)
-    hadamard(b2)
-    hadamard(b3)
-    hadamard(ba)
+    bits = [Qubit() for _ in range(n_bits)]
+    
+    ancilla = Qubit()
+    sigmaX(ancilla)
+    
+    for bi in bits:
+        hadamard(bi)
+    hadamard(ancilla)
 
-    apply_operator(a, b1, b2, b3, ba)
+    apply_operator(a, *(bits + [ancilla]))
         
-    hadamard(b1)
-    hadamard(b2)
-    hadamard(b3)
+    for bi in bits:
+        hadamard(bi)
+    
+    disjunction = False
+    for bi in bits:
+        disjunction = disjunction or measure(bi)
 
-    if (measure(b1) or measure(b2) or measure(b3)):
+    if (disjunction):
         print('Predicted: Balanced')
         assert function == balanced
     else:
