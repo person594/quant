@@ -1,10 +1,34 @@
 import numpy as np
 
+def iter_bitstrings(n_bits):
+    if n_bits == 0:
+        yield ()
+    else:
+        for bitstring in iter_bitstrings(n_bits-1):
+            yield bitstring + (0,)
+            yield bitstring + (1,)
 
 class Qubit:
     def __init__(self):
         self.space = HilbertSpace([self])
 
+    def density_matrix(self):
+        i = self.space.qubits.index(self)
+        bits_before = i
+        bits_after = len(self.space.qubits) - i - 1
+        state = self.space.state
+        rho = np.zeros((2,2))
+        for prefix in iter_bitstrings(bits_before):
+            for suffix in iter_bitstrings(bits_after):
+                rho[0,0] += state[prefix + (0,) + suffix] **2
+                rho[0,1] += state[prefix + (0,) + suffix] * state[prefix + (1,) + suffix]
+                rho[1,1] += state[prefix + (1,) + suffix] **2
+        rho[1,0] = rho[0,1]
+        return rho
+    
+    def __repr__(self):
+        rho = self.density_matrix()
+        return str(rho)
 
 class HilbertSpace:
     def __init__(self, qubits = []):
@@ -25,6 +49,8 @@ class HilbertSpace:
 
     # TODO: detect if the space can be rewritten as a tensor product of
     # unentangled states
+    # In the general case, this is NP-hard (https://en.wikipedia.org/wiki/Tensor_rank_decomposition),
+    # but it might be possible for some special cases
     def disentangle(self):
         return [self]
 
