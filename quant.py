@@ -28,7 +28,7 @@ class Qubit:
     
     def __repr__(self):
         rho = self.density_matrix()
-        return str(rho)
+        return "Qubit(%s)" % str(rho).replace('\n', '\n      ')
 
 class HilbertSpace:
     def __init__(self, qubits = []):
