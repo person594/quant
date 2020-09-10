@@ -17,7 +17,7 @@ class Qubit:
         bits_before = i
         bits_after = len(self.space.qubits) - i - 1
         state = self.space.state
-        rho = np.zeros((2,2))
+        rho = np.zeros((2,2), dtype=np.complex)
         for prefix in iter_bitstrings(bits_before):
             for suffix in iter_bitstrings(bits_after):
                 rho[0,0] += state[prefix + (0,) + suffix] **2
@@ -137,3 +137,13 @@ def toffoli(b1, b2, b3):
 def rotate(theta, b):
     operator = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
     apply_operator(operator, b)
+
+def qft(*qubits):
+    n_qubits = len(qubits)
+    omega = np.exp(2*np.pi*1j/(2**n_qubits))
+    U = np.zeros([2, 2]* n_qubits, dtype=np.complex)
+    for r, row_state in enumerate(iter_bitstrings(n_qubits)):
+        for c, col_state in enumerate(iter_bitstrings(n_qubits)):
+            U[row_state + col_state] = omega**(r*c)
+    U *= 2**(-n_qubits/2)
+    apply_operator(U, *qubits)
